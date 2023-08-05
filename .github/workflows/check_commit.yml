@@ -1,0 +1,20 @@
+name: Check Commit Message
+
+on: [pull_request]
+
+jobs:
+  check-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run pre-commit check
+        run: |
+          commit_message=$(cat $GITHUB_EVENT_PATH | jq -r '.pull_request.head.commit.message')
+          ticket_pattern='[A-Z]+-[0-9]+'
+          
+          if ! [[ $commit_message =~ $ticket_pattern ]]; then
+              echo "Error: Your commit message must include a Jira ticket number (e.g., PROJECT-123)."
+              exit 1
+          fi
