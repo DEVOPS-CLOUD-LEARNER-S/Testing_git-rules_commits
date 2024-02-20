@@ -1,26 +1,24 @@
-name: Enforce Commit Message
+name: Commit Check
 
 on:
   push:
     branches:
-      - main  # Only trigger for pushes to the main branch
+      - main
+      - 'main/**' # Optional: You can specify specific directories if needed
 
 jobs:
-  enforce-commit-message:
+  commit-check:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-
-    - name: Verify Commit Messages
-      if: github.ref == 'refs/heads/main'  # Only execute on the main branch
-      run: |
-        for commit in $(git log --format="%H" origin/main..HEAD); do
-          message=$(git log --format="%s" -n 1 $commit)
-          if ! echo "$message" | grep -qE '[A-Z]+-[0-9]+'; then
-            echo "Commit $commit does not reference a Jira ticket."
-            exit 1
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Verify Commit Message
+        run: |
+          if [[ $GITHUB_REF != 'refs/heads/main' ]]; then
+            if ! git log -1 --pretty=%B | grep -q '[A-Z]+-[0-9]+'; then
+              echo "Error: Jira ticket ID not found in the commit message."
+              exit 1
+            fi
           fi
-        done
 
