@@ -1,0 +1,25 @@
+name: Enforce Commit Message
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your main branch name
+
+jobs:
+  enforce-commit-message:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Verify Commit Messages
+      run: |
+        for commit in $(git log --format="%H" origin/main..HEAD); do
+          message=$(git log --format="%s" -n 1 $commit)
+          if ! echo "$message" | grep -qE '[A-Z]+-[0-9]+'; then
+            echo "Commit $commit does not reference a Jira ticket."
+            exit 1
+          fi
+        done
+
